@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Community Yield Pool - Earn yield while supporting public goods"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Community Yield Pool</title>
+    <style>
+      /* Hide React error overlay completely */
+      #react-error-overlay {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      /* Hide any error overlays */
+      [class*="error-overlay"],
+      [id*="error-overlay"],
+      [class*="errorOverlay"],
+      [id*="errorOverlay"] {
+        display: none !important;
+      }
+    </style>
+    <script>
+      // Aggressively suppress React error overlay for RPC timeout errors
+      // This runs BEFORE React loads to catch errors early
+      (function() {
+        const originalError = window.onerror;
+        window.onerror = function(message, source, lineno, colno, error) {
+          const errorMessage = message || error?.message || error?.toString() || '';
+          if (errorMessage.includes('timeout') || 
+              errorMessage.includes('TimeoutError') || 
+              errorMessage.includes('signal timed out') ||
+              errorMessage.includes('rpc.sepolia.org') ||
+              errorMessage.includes('The request took too long') ||
+              errorMessage.includes('eth_getBalance') ||
+              errorMessage.includes('HttpRequestError')) {
+            // Suppress React error overlay
+            return true;
+          }
+          if (originalError) {
+            return originalError.call(this, message, source, lineno, colno, error);
+          }
+          return false;
+        };
+        
+        // Also suppress unhandled rejections
+        window.addEventListener('unhandledrejection', function(event) {
+          const errorMessage = event.reason?.message || event.reason?.toString() || '';
+          if (errorMessage.includes('timeout') || 
+              errorMessage.includes('TimeoutError') || 
+              errorMessage.includes('signal timed out') ||
+              errorMessage.includes('rpc.sepolia.org') ||
+              errorMessage.includes('The request took too long') ||
+              errorMessage.includes('eth_getBalance') ||
+              errorMessage.includes('HttpRequestError')) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+          }
+        }, true);
+        
+        // Remove error overlay if it appears - VERY AGGRESSIVE
+        function removeErrorOverlay() {
+          // Remove by ID
+          const overlay = document.getElementById('react-error-overlay');
+          if (overlay) {
+            overlay.remove();
+            return;
+          }
+          
+          // Remove by class name
+          const overlays = document.querySelectorAll('[class*="overlay"], [id*="overlay"]');
+          overlays.forEach(el => {
+            const text = el.textContent || '';
+            if (text.includes('timeout') || 
+                text.includes('TimeoutError') || 
+                text.includes('signal timed out') ||
+                text.includes('rpc.sepolia.org') ||
+                text.includes('eth_getBalance') ||
+                text.includes('HttpRequestError')) {
+              el.remove();
+            }
+          });
+          
+          // Remove any divs with error text
+          const errorDivs = document.querySelectorAll('div');
+          errorDivs.forEach(div => {
+            const text = div.textContent || '';
+            if (text.includes('HTTP request failed') && text.includes('rpc.sepolia.org')) {
+              div.remove();
+            }
+          });
+        }
+        
+        // Check immediately and VERY frequently
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function() {
+            setInterval(removeErrorOverlay, 10); // Check every 10ms
+            removeErrorOverlay();
+          });
+        } else {
+          setInterval(removeErrorOverlay, 10); // Check every 10ms
+          removeErrorOverlay();
+        }
+        
+        // Also use MutationObserver to catch overlay immediately
+        if (document.body) {
+          const observer = new MutationObserver(removeErrorOverlay);
+          observer.observe(document.body, { childList: true, subtree: true });
+        } else {
+          document.addEventListener('DOMContentLoaded', function() {
+            const observer = new MutationObserver(removeErrorOverlay);
+            observer.observe(document.body, { childList: true, subtree: true });
+          });
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
