@@ -2,7 +2,7 @@
   "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "frontend/build",
   "devCommand": "cd frontend && npm start",
-  "installCommand": "cd frontend && npm install --legacy-peer-deps",
+  "installCommand": "cd frontend && npm ci --legacy-peer-deps || (rm -rf node_modules package-lock.json && npm install --legacy-peer-deps)",
   "rewrites": [
     {
       "source": "/(.*)",
